@@ -1,11 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/layout/Navbar.jsx';
 import Footer from './components/layout/Footer.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
 
 const HomePage = () => <div className="page-shell"><h1>Home</h1></div>;
 const EventsPage = () => <div className="page-shell"><h1>Events</h1></div>;
-const LoginPage = () => <div className="page-shell"><h1>Login</h1></div>;
-const RegisterPage = () => <div className="page-shell"><h1>Register</h1></div>;
 const NotFoundPage = () => <div className="page-shell"><h1>Page not found</h1></div>;
 
 function App() {
