@@ -1,19 +1,33 @@
-import create from 'zustand';
+/**
+ * Zustand auth store — persists token to localStorage.
+ * Singleton-like: single store instance shared across the app.
+ */
+import { create } from 'zustand'
 
-const useAuthStore = create((state) => ({
-  token: null,
-  user: null,
-  setAuth: (token, user) => set({ token, user }),
-  clearAuth: () => set({ token: null, user: null }),
-}));
+const useAuthStore = create((set) => ({
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  token: localStorage.getItem('access_token') || null,
 
-export const getAuthToken = () => {
-  const state = useAuthStore.getState();
-  return state.token;
-};
+  login: (user, accessToken, refreshToken) => {
+    localStorage.setItem('access_token', accessToken)
+    localStorage.setItem('refresh_token', refreshToken)
+    localStorage.setItem('user', JSON.stringify(user))
+    set({ user, token: accessToken })
+  },
 
-export const clearAuth = () => {
-  useAuthStore.getState().clearAuth();
-};
+  logout: () => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('user')
+    set({ user: null, token: null })
+  },
 
-export default useAuthStore;
+  updateUser: (updates) =>
+    set((state) => {
+      const updated = { ...state.user, ...updates }
+      localStorage.setItem('user', JSON.stringify(updated))
+      return { user: updated }
+    }),
+}))
+
+export default useAuthStore

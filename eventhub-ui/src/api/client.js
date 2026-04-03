@@ -1,29 +1,46 @@
-import axios from 'axios';
-import { getAuthToken, clearAuth } from '../store/authStore';
+import axios from 'axios'
 
-const client = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-client.interceptors.request.use((config) => {
-  const token = getAuthToken();
+const api = axios.create({
+  baseURL: `${API_URL}/api/v1`,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+// Attach JWT token to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token')
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`
   }
-  return config;
-});
+  return config
+})
 
-client.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      clearAuth();
+// Auto-refresh on 401
+api.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    const original = error.config
+    if (error.response?.status === 401 && !original._retry) {
+      original._retry = true
+      const refreshToken = localStorage.getItem('refresh_token')
+      if (refreshToken) {
+        try {
+          const { data } = await axios.post(`${API_URL}/api/v1/auth/refresh`, {
+            refresh_token: refreshToken,
+          })
+          localStorage.setItem('access_token', data.access_token)
+          original.headers.Authorization = `Bearer ${data.access_token}`
+          return api(original)
+        } catch {
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('refresh_token')
+          window.location.href = '/login'
+        }
+      }
     }
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
-export default client;
+export default api
