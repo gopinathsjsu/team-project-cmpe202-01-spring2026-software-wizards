@@ -1,26 +1,48 @@
-import { useCallback } from 'react';
-import useAuthStore from '../store/authStore';
-import client from '../api/client';
+import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import api from '../api/client'
+import useAuthStore from '../store/authStore'
 
-export default function useAuth() {
-  const setAuth = useAuthStore((state) => state.setAuth);
-  const clearAuth = useAuthStore((state) => state.clearAuth);
+export function useAuth() {
+  const navigate = useNavigate()
+  const { login, logout } = useAuthStore()
 
-  const login = useCallback(async (credentials) => {
-    const response = await client.post('/auth/login', credentials);
-    const { access_token, user } = response.data;
-    setAuth(access_token, user);
-    return response;
-  }, [setAuth]);
+  const loginMutation = useMutation({
+    mutationFn: (credentials) => api.post('/auth/login', credentials),
+    onSuccess: ({ data }) => {
+      login(data.user, data.access_token, data.refresh_token)
+      navigate('/')
+    },
+  })
 
-  const register = useCallback(async (values) => {
-    const response = await client.post('/auth/register', values);
-    return response;
-  }, [setAuth]);
+  const registerMutation = useMutation({
+    mutationFn: (userData) => api.post('/auth/register', userData),
+    onSuccess: ({ data }) => {
+      login(data.user, data.access_token, data.refresh_token)
+      navigate('/')
+    },
+  })
 
-  const logout = useCallback(() => {
-    clearAuth();
-  }, [clearAuth]);
+  const requestResetMutation = useMutation({
+    mutationFn: (email) => api.post('/auth/request-password-reset', { email }),
+  })
 
-  return { login, register, logout };
+  const resetPasswordMutation = useMutation({
+    mutationFn: ({ token, new_password }) =>
+      api.post('/auth/reset-password', { token, new_password }),
+    onSuccess: () => navigate('/login'),
+  })
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
+  return {
+    loginMutation,
+    registerMutation,
+    requestResetMutation,
+    resetPasswordMutation,
+    logout: handleLogout,
+  }
 }

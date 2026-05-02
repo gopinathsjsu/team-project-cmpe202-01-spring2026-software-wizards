@@ -15,10 +15,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Enums
-    op.execute("CREATE TYPE user_role AS ENUM ('attendee', 'organizer', 'admin')")
-    op.execute("CREATE TYPE event_status AS ENUM ('draft', 'pending', 'published', 'cancelled', 'rejected')")
-    op.execute("CREATE TYPE registration_status AS ENUM ('confirmed', 'cancelled', 'pending')")
 
     # users
     op.create_table(
