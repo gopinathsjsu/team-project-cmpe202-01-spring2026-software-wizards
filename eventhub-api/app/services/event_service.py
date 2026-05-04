@@ -101,7 +101,7 @@ class OrganizerNotificationObserver(EventStatusObserver):
             if new_status == "rejected":
                 kwargs["reason"] = event.rejection_reason or ""
             notif = NotificationFactory.create(ntype, **kwargs)
-            asyncio.create_task(email_service.send(notif))
+            await email_service.send(notif)
 
 
 class EventStatusSubject:
@@ -166,7 +166,7 @@ async def send_reminders():
                         user=reg.attendee,
                         event=event,
                     )
-                    asyncio.create_task(email_service.send(notif))
+                    await email_service.send(notif)
                     reg.reminder_sent = True
                     db.add(reg)
             await db.commit()
