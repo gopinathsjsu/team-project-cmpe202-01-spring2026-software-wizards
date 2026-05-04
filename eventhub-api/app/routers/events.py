@@ -88,6 +88,25 @@ async def create_event(
     return await event_crud.get_with_details(db, event.id)
 
 
+@router.get("/mine", response_model=PaginatedResponse[EventListItem])
+async def list_my_events(
+    page: int = Query(1, ge=1),
+    size: int = Query(50, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("organizer", "admin")),
+):
+    events, total = await event_crud.get_by_organizer(db, current_user.id, page=page, size=size)
+    items = []
+    for event in events:
+        stats = await event_crud.get_stats(db, event.id)
+        items.append(_to_event_list_item(event, stats))
+    return PaginatedResponse(
+        total=total, page=page, size=size,
+        pages=math.ceil(total / size) if size else 1,
+        items=items,
+    )
+
+
 @router.get("/{id}", response_model=EventRead)
 async def get_event(id: UUID, db: AsyncSession = Depends(get_db)):
     event = await event_crud.get_with_details(db, id)

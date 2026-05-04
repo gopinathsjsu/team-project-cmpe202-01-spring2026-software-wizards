@@ -82,7 +82,7 @@ class AttendeeNotificationObserver(EventStatusObserver):
                             user=reg.attendee,
                             event=event,
                         )
-                        asyncio.create_task(email_service.send(notif))
+                        await email_service.send(notif)
 
 
 class OrganizerNotificationObserver(EventStatusObserver):

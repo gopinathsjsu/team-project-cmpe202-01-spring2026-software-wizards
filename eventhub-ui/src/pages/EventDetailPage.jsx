@@ -131,7 +131,7 @@ export default function EventDetailPage() {
                     className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline focus:ring-2 focus:ring-blue-500 rounded">
                     <ExternalLink size={14} aria-hidden="true" /> Outlook
                   </a>
-                  <a href={`/api/v1/events/${event.id}/calendar.ics`} download
+                  <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/events/${event.id}/calendar.ics`} download
                     className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline focus:ring-2 focus:ring-blue-500 rounded">
                     Download .ics
                   </a>

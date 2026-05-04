@@ -40,8 +40,11 @@ export default function CreateEventPage() {
     if (Object.keys(errs).length) return
 
     try {
+      const toISO = (s) => s ? new Date(s).toISOString() : s
       const payload = {
         ...form,
+        start_at: toISO(form.start_at),
+        end_at: toISO(form.end_at),
         tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         category_id: form.category_id || null,
         capacity: parseInt(form.capacity),

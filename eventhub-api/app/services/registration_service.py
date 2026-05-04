@@ -113,7 +113,7 @@ async def create_registration(
             registration=reg_with_details,
             event=event,
         )
-        asyncio.create_task(email_service.send(notif))
+        await email_service.send(notif)
 
     return reg_with_details
 
@@ -166,6 +166,6 @@ async def cancel_registration(
             registration=reg,
             event=event,
         )
-        asyncio.create_task(email_service.send(notif))
+        await email_service.send(notif)
 
     return reg

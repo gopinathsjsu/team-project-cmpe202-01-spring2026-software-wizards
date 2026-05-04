@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Plus, Edit, Trash2, CheckCircle, Clock } from 'lucide-react'
-import { useEvents, useSubmitEvent, useDeleteEvent } from '../hooks/useEvents'
+import { useMyEvents, useSubmitEvent, useDeleteEvent } from '../hooks/useEvents'
 import useAuthStore from '../store/authStore'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
@@ -9,7 +9,7 @@ import { formatEventDateTime } from '../utils/formatDate'
 
 export default function MyEventsPage() {
   const { user } = useAuthStore()
-  const { data, isLoading } = useEvents({ organizer_id: user?.id, size: 50 })
+  const { data, isLoading } = useMyEvents({ size: 50 })
   const submitEvent = useSubmitEvent()
   const deleteEvent = useDeleteEvent()
 
@@ -17,9 +17,11 @@ export default function MyEventsPage() {
     <div className="max-w-4xl mx-auto px-4 py-10">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">My Events</h1>
-        <Link to="/dashboard/events/new">
-          <Button><Plus size={16} aria-hidden="true" /> Create Event</Button>
-        </Link>
+        {['organizer', 'admin'].includes(user?.role) && (
+          <Link to="/dashboard/events/new">
+            <Button><Plus size={16} aria-hidden="true" /> Create Event</Button>
+          </Link>
+        )}
       </div>
 
       {isLoading ? (
@@ -70,14 +72,16 @@ export default function MyEventsPage() {
                     <Button variant="secondary" size="sm">Attendees</Button>
                   </Link>
                 ) : null}
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => confirm('Cancel this event?') && deleteEvent.mutate(event.id)}
-                  aria-label={`Cancel event ${event.title}`}
-                >
-                  <Trash2 size={14} aria-hidden="true" />
-                </Button>
+                {event.status !== 'cancelled' && (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => confirm('Cancel this event?') && deleteEvent.mutate(event.id)}
+                    aria-label={`Cancel event ${event.title}`}
+                  >
+                    <Trash2 size={14} aria-hidden="true" />
+                  </Button>
+                )}
               </div>
             </div>
           ))}

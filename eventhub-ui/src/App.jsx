@@ -20,6 +20,7 @@ const AdminPage = lazy(() => import('./pages/AdminPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const MyRegistrationsPage = lazy(() => import('./pages/MyRegistrationsPage'))
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
+const EventAttendeesPage = lazy(() => import('./pages/EventAttendeesPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function RequireAuth({ children, roles }) {
@@ -38,6 +39,9 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/events" element={<EventsPage />} />
+            <Route path="/events/:id/attendees" element={
+              <RequireAuth roles={['organizer', 'admin']}><EventAttendeesPage /></RequireAuth>
+            } />
             <Route path="/events/:id" element={<EventDetailPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
@@ -47,7 +51,7 @@ export default function App() {
               <RequireAuth><ProfilePage /></RequireAuth>
             } />
             <Route path="/my-events" element={
-              <RequireAuth><MyEventsPage /></RequireAuth>
+              <RequireAuth roles={['organizer', 'admin']}><MyEventsPage /></RequireAuth>
             } />
             <Route path="/my-registrations" element={
               <RequireAuth><MyRegistrationsPage /></RequireAuth>

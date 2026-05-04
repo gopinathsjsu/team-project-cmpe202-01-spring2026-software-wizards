@@ -18,13 +18,19 @@ export default function EditEventPage() {
   const [errors, setErrors] = useState({})
   const [success, setSuccess] = useState(false)
 
+  const toLocalInput = (iso) => {
+    if (!iso) return ''
+    const d = new Date(iso)
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+  }
+
   useEffect(() => {
     if (event) setForm({
       title: event.title,
       description: event.description,
       category_id: event.category_id || '',
-      start_at: event.start_at?.slice(0, 16),
-      end_at: event.end_at?.slice(0, 16),
+      start_at: toLocalInput(event.start_at),
+      end_at: toLocalInput(event.end_at),
       venue_name: event.venue_name || '',
       address: event.address || '',
       city: event.city || '',
@@ -42,8 +48,11 @@ export default function EditEventPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
+      const toISO = (s) => s ? new Date(s).toISOString() : s
       await updateEvent.mutateAsync({
         ...form,
+        start_at: toISO(form.start_at),
+        end_at: toISO(form.end_at),
         tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         category_id: form.category_id || null,
       })

@@ -19,13 +19,17 @@ export default function MyRegistrationsPage() {
   const { cancel } = useRegistration()
   const [qrReg, setQrReg] = useState(null)
   const [cancelError, setCancelError] = useState('')
+  const [cancellingId, setCancellingId] = useState(null)
 
   const handleCancel = async (id) => {
     if (!confirm('Cancel this registration?')) return
+    setCancellingId(id)
     try {
       await cancel.mutateAsync(id)
     } catch (err) {
       setCancelError(err.response?.data?.detail || 'Cancellation failed')
+    } finally {
+      setCancellingId(null)
     }
   }
 
@@ -98,7 +102,7 @@ export default function MyRegistrationsPage() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      loading={cancel.isPending}
+                      loading={cancellingId === reg.id}
                       onClick={() => handleCancel(reg.id)}
                       aria-label="Cancel registration"
                     >

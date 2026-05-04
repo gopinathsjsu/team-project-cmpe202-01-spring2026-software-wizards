@@ -23,8 +23,7 @@ export function useEvent(id) {
 export function useMyEvents(params = {}) {
   return useQuery({
     queryKey: ['my-events', params],
-    queryFn: () =>
-      api.get('/events', { params: { ...params, organizer: true } }).then((r) => r.data),
+    queryFn: () => api.get('/events/mine', { params }).then((r) => r.data),
   })
 }
 
@@ -40,7 +39,10 @@ export function useCreateEvent() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data) => api.post('/events', data).then((r) => r.data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['events'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['my-events'] })
+    },
   })
 }
 
@@ -59,7 +61,10 @@ export function useSubmitEvent() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id) => api.post(`/events/${id}/submit`).then((r) => r.data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['events'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['my-events'] })
+    },
   })
 }
 
@@ -67,7 +72,10 @@ export function useDeleteEvent() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id) => api.delete(`/events/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['events'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['my-events'] })
+    },
   })
 }
 

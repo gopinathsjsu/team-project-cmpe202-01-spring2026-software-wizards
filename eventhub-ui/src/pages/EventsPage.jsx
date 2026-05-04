@@ -30,6 +30,20 @@ export default function EventsPage() {
     setPage(1)
   }, [filters])
 
+  // Sync URL → filters (handles navbar search navigating to /events?q=...)
+  useEffect(() => {
+    const urlFilters = {
+      q: searchParams.get('q') || undefined,
+      category_id: searchParams.get('category_id') || undefined,
+      city: searchParams.get('city') || undefined,
+      sort: searchParams.get('sort') || 'date',
+      is_free: searchParams.get('is_free') || undefined,
+      is_virtual: searchParams.get('is_virtual') || undefined,
+    }
+    const hasChange = Object.keys(urlFilters).some((k) => urlFilters[k] !== filters[k])
+    if (hasChange) setFilters(urlFilters)
+  }, [searchParams])
+
   const handleFiltersChange = (newFilters) => setFilters(newFilters)
   const handleSearch = (q) => setFilters((f) => ({ ...f, q: q || undefined }))
 
@@ -37,7 +51,7 @@ export default function EventsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Browse Events</h1>
 
-      <SearchBar defaultValue={filters.q || ''} onSearch={handleSearch} />
+      <SearchBar key={filters.q || ''} defaultValue={filters.q || ''} onSearch={handleSearch} />
 
       <div className="mt-8 flex flex-col md:flex-row gap-8">
         {/* Filters sidebar */}
