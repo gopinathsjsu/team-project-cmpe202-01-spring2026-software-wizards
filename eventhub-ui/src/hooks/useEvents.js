@@ -23,8 +23,7 @@ export function useEvent(id) {
 export function useMyEvents(params = {}) {
   return useQuery({
     queryKey: ['my-events', params],
-    queryFn: () =>
-      api.get('/events', { params: { ...params, organizer: true } }).then((r) => r.data),
+    queryFn: () => api.get('/events/mine', { params }).then((r) => r.data),
   })
 }
 

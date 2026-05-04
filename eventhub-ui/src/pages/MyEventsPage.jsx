@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Plus, Edit, Trash2, CheckCircle, Clock } from 'lucide-react'
-import { useEvents, useSubmitEvent, useDeleteEvent } from '../hooks/useEvents'
+import { useMyEvents, useSubmitEvent, useDeleteEvent } from '../hooks/useEvents'
 import useAuthStore from '../store/authStore'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
@@ -9,7 +9,7 @@ import { formatEventDateTime } from '../utils/formatDate'
 
 export default function MyEventsPage() {
   const { user } = useAuthStore()
-  const { data, isLoading } = useEvents({ organizer_id: user?.id, size: 50 })
+  const { data, isLoading } = useMyEvents()
   const submitEvent = useSubmitEvent()
   const deleteEvent = useDeleteEvent()
 

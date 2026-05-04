@@ -93,7 +93,9 @@ export default function Navbar() {
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                     <Link to="/my-registrations" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>My Tickets</Link>
-                    <Link to="/my-events" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>My Events</Link>
+                    {(user.role === 'organizer' || user.role === 'admin') && (
+                      <Link to="/my-events" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>My Events</Link>
+                    )}
                     {(user.role === 'organizer' || user.role === 'admin') && (
                       <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>Dashboard</Link>
                     )}
@@ -147,7 +149,9 @@ export default function Navbar() {
             {user ? (
               <>
                 <Link to="/my-registrations" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>My Tickets</Link>
-                <Link to="/my-events" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>My Events</Link>
+                {(user.role === 'organizer' || user.role === 'admin') && (
+                  <Link to="/my-events" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>My Events</Link>
+                )}
                 {(user.role === 'organizer' || user.role === 'admin') && (
                   <Link to="/dashboard" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>Dashboard</Link>
                 )}

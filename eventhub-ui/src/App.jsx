@@ -47,7 +47,7 @@ export default function App() {
               <RequireAuth><ProfilePage /></RequireAuth>
             } />
             <Route path="/my-events" element={
-              <RequireAuth><MyEventsPage /></RequireAuth>
+              <RequireAuth roles={['organizer', 'admin']}><MyEventsPage /></RequireAuth>
             } />
             <Route path="/my-registrations" element={
               <RequireAuth><MyRegistrationsPage /></RequireAuth>
