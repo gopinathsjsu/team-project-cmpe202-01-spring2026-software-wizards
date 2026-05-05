@@ -26,7 +26,7 @@ export default function EventMap({ event }) {
       <MapContainer
         center={[lat, lng]}
         zoom={14}
-        style={{ height: '300px', borderRadius: '12px' }}
+        style={{ height: '300px', borderRadius: '12px', zIndex: 0 }}
         aria-label={`Map showing location of ${event.venue_name || 'event venue'}`}
       >
         <TileLayer
