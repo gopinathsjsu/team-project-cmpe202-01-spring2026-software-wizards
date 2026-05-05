@@ -5,6 +5,7 @@ import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
 import Alert from '../components/ui/Alert'
 import Spinner from '../components/ui/Spinner'
+import EventMap from '../components/map/EventMap'
 
 export default function EditEventPage() {
   const { id } = useParams()
@@ -17,6 +18,8 @@ export default function EditEventPage() {
   const [newTicket, setNewTicket] = useState({ name: '', price: 0, quantity_total: 50 })
   const [errors, setErrors] = useState({})
   const [success, setSuccess] = useState(false)
+  const [geoLoading, setGeoLoading] = useState(false)
+  const [geoError, setGeoError] = useState('')
 
   const toLocalInput = (iso) => {
     if (!iso) return ''
@@ -37,12 +40,40 @@ export default function EditEventPage() {
       capacity: event.capacity,
       is_virtual: event.is_virtual,
       tags: event.tags?.join(', ') || '',
+      latitude: event.latitude ? parseFloat(event.latitude) : null,
+      longitude: event.longitude ? parseFloat(event.longitude) : null,
     })
   }, [event])
 
   const set = (k) => (e) => {
     const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value
-    setForm((f) => ({ ...f, [k]: val }))
+    const locationFields = ['address', 'city']
+    setForm((f) => ({
+      ...f,
+      [k]: val,
+      ...(locationFields.includes(k) ? { latitude: null, longitude: null } : {}),
+    }))
+    if (['address', 'city'].includes(k)) setGeoError('')
+  }
+
+  const geocodeAddress = async () => {
+    const query = [form.address, form.city].filter(Boolean).join(', ')
+    if (!query) { setGeoError('Enter an address or city first'); return }
+    setGeoLoading(true)
+    setGeoError('')
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      )
+      const data = await res.json()
+      if (!data.length) { setGeoError('Address not found. Try a more specific address.'); return }
+      setForm(f => ({ ...f, latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) }))
+    } catch {
+      setGeoError('Geocoding failed. Check your connection.')
+    } finally {
+      setGeoLoading(false)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -55,6 +86,8 @@ export default function EditEventPage() {
         end_at: toISO(form.end_at),
         tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         category_id: form.category_id || null,
+        latitude: form.latitude || null,
+        longitude: form.longitude || null,
       })
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
@@ -113,6 +146,19 @@ export default function EditEventPage() {
               <Input id="edit_venue" label="Venue" value={form.venue_name} onChange={set('venue_name')} />
               <Input id="edit_address" label="Address" value={form.address} onChange={set('address')} />
               <Input id="edit_city" label="City" value={form.city} onChange={set('city')} />
+              <div className="flex items-center gap-3">
+                <Button type="button" variant="secondary" size="sm" onClick={geocodeAddress} loading={geoLoading}>
+                  Find on Map
+                </Button>
+                {geoError && <p className="text-xs text-red-600">{geoError}</p>}
+                {form.latitude && !geoError && <p className="text-xs text-green-600">Location found ✓</p>}
+              </div>
+              {form.latitude && form.longitude && (
+                <EventMap
+                  key={`${form.latitude},${form.longitude}`}
+                  event={{ is_virtual: false, latitude: form.latitude, longitude: form.longitude, venue_name: form.venue_name, address: form.address }}
+                />
+              )}
             </>
           )}
           <Input id="edit_capacity" label="Capacity" type="number" value={form.capacity} onChange={set('capacity')} />
