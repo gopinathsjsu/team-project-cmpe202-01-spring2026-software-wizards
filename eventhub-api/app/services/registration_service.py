@@ -47,12 +47,14 @@ async def create_registration(
     from app.services.notification_service import NotificationFactory, NotificationType
     from app.services.email_service import email_service
 
-    # 1. Verify event is published
+    # 1. Verify event is published and has not yet ended
     event = await event_crud.get_with_details(db, data.event_id)
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     if event.status != "published":
         raise HTTPException(status_code=400, detail="Event is not available for registration")
+    if event.end_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="This event has already ended")
 
     # 2 & 3. Lock the ticket_type row (SELECT FOR UPDATE) and validate
     ticket_type = await registration_crud.select_for_update(db, data.ticket_type_id)

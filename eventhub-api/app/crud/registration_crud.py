@@ -40,7 +40,10 @@ class RegistrationCRUD(BaseCRUD[Registration, RegistrationCreate, RegistrationCr
         if status:
             query = query.where(Registration.status == status)
         if upcoming:
-            query = query.where(Event.start_at > datetime.now(timezone.utc))
+            query = query.where(
+                Event.start_at > datetime.now(timezone.utc),
+                Registration.status != "cancelled",
+            )
 
         total_result = await db.execute(select(func.count()).select_from(query.subquery()))
         total = total_result.scalar_one()

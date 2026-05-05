@@ -95,7 +95,7 @@ export default function Navbar() {
                 </button>
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                    {!isAdmin && (
+                    {user.role === 'attendee' && (
                       <Link to="/my-registrations" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>My Tickets</Link>
                     )}
                     {!isAdmin && user.role === 'organizer' && (
@@ -156,7 +156,7 @@ export default function Navbar() {
             <Link to="/events" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>Browse Events</Link>
             {user ? (
               <>
-                {!isAdmin && (
+                {user.role === 'attendee' && (
                   <Link to="/my-registrations" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>My Tickets</Link>
                 )}
                 {!isAdmin && user.role === 'organizer' && (

@@ -196,11 +196,13 @@ export default function EventDetailPage() {
                   From {formatPrice(Math.min(...event.ticket_types.map(t => t.price)))}
                 </p>
               )}
-              {event.status === 'published' ? (
+              {event.status === 'published' && new Date(event.end_at) >= new Date() ? (
                 <TicketSelector
                   event={event}
                   onSuccess={(result) => setRegResult(result)}
                 />
+              ) : new Date(event.end_at) < new Date() ? (
+                <p className="text-sm text-gray-500">This event has already ended.</p>
               ) : (
                 <p className="text-sm text-gray-500">Registration is not currently available for this event.</p>
               )}

@@ -76,6 +76,10 @@ class AttendeeNotificationObserver(EventStatusObserver):
             async with AsyncSessionLocal() as db:
                 registrations = await registration_crud.get_confirmed(db, event.id)
                 for reg in registrations:
+                    reg.status = "cancelled"
+                    db.add(reg)
+                await db.commit()
+                for reg in registrations:
                     if reg.attendee:
                         notif = NotificationFactory.create(
                             NotificationType.EVENT_CANCELLATION,
