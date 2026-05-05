@@ -1,12 +1,13 @@
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { useEventAttendees } from '../hooks/useEvents'
+import { useEventAttendees, useEvent } from '../hooks/useEvents'
 import Spinner from '../components/ui/Spinner'
 import { formatEventDateTime } from '../utils/formatDate'
 
 export default function EventAttendeesPage() {
   const { id } = useParams()
   const { data, isLoading } = useEventAttendees(id)
+  const { data: event } = useEvent(id)
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
@@ -14,7 +15,11 @@ export default function EventAttendeesPage() {
         <ArrowLeft size={14} /> Back to My Events
       </Link>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Attendees</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Attendees</h1>
+      {event?.title && (
+        <p className="text-gray-500 mt-1 mb-6">{event.title}</p>
+      )}
+      {!event?.title && <div className="mb-6" />}
 
       {isLoading ? (
         <div className="flex justify-center py-20"><Spinner size="lg" /></div>

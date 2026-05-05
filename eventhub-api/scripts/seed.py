@@ -1,15 +1,28 @@
 """
 Seed script — populates the database with realistic mock data using Faker.
 Run: python scripts/seed.py
+
+Demo credentials
+  Admin:       admin@eventhub.dev        / Admin1234!
+  Organizers:  organizer1@eventhub.dev   / Passw0rd!
+               organizer2@eventhub.dev   / Passw0rd!
+               organizer3@eventhub.dev   / Passw0rd!
+               organizer4@eventhub.dev   / Passw0rd!
+               organizer5@eventhub.dev   / Passw0rd!
+  Attendees:   attendee01@eventhub.dev   / Passw0rd!
+               attendee02@eventhub.dev   / Passw0rd!
+               ...
+               attendee20@eventhub.dev   / Passw0rd!
 """
 import asyncio
 import random
 from datetime import datetime, timedelta, timezone
 
 from faker import Faker
-from sqlalchemy.ext.asyncio import AsyncSession
 
 fake = Faker()
+Faker.seed(42)
+random.seed(42)
 
 CITIES = [
     {"name": "Austin", "state": "TX", "lat": 30.2672, "lng": -97.7431},
@@ -18,6 +31,8 @@ CITIES = [
     {"name": "Chicago", "state": "IL", "lat": 41.8781, "lng": -87.6298},
     {"name": "Seattle", "state": "WA", "lat": 47.6062, "lng": -122.3321},
     {"name": "Boston", "state": "MA", "lat": 42.3601, "lng": -71.0589},
+    {"name": "Los Angeles", "state": "CA", "lat": 34.0522, "lng": -118.2437},
+    {"name": "Denver", "state": "CO", "lat": 39.7392, "lng": -104.9903},
 ]
 
 CATEGORIES = [
@@ -29,6 +44,80 @@ CATEGORIES = [
     {"name": "Business", "slug": "business", "icon": "💼"},
     {"name": "Health & Wellness", "slug": "health-wellness", "icon": "🏃"},
     {"name": "Education", "slug": "education", "icon": "📚"},
+]
+
+ORGANIZER_NAMES = [
+    ("Alice", "Chen"),
+    ("Brian", "Patel"),
+    ("Carol", "Nguyen"),
+    ("David", "Kim"),
+    ("Elena", "Rodriguez"),
+]
+
+ATTENDEE_NAMES = [
+    ("James", "Wilson"),
+    ("Sophia", "Martinez"),
+    ("Liam", "Thompson"),
+    ("Emma", "Johnson"),
+    ("Noah", "Brown"),
+    ("Olivia", "Davis"),
+    ("William", "Garcia"),
+    ("Ava", "Miller"),
+    ("Benjamin", "Taylor"),
+    ("Isabella", "Anderson"),
+    ("Mason", "Thomas"),
+    ("Mia", "Jackson"),
+    ("Ethan", "White"),
+    ("Charlotte", "Harris"),
+    ("Alexander", "Martin"),
+    ("Amelia", "Lee"),
+    ("Henry", "Clark"),
+    ("Harper", "Lewis"),
+    ("Sebastian", "Robinson"),
+    ("Evelyn", "Walker"),
+]
+
+EVENT_TITLES = [
+    "AI & Machine Learning Summit 2025",
+    "React Conf: Building Tomorrow's Web",
+    "Startup Pitch Night — Silicon Valley",
+    "Jazz Under the Stars",
+    "Bay Area 5K Fun Run",
+    "Contemporary Art Exhibition Opening",
+    "Farm-to-Table Dinner Experience",
+    "Women in Tech Leadership Forum",
+    "Yoga & Mindfulness Retreat",
+    "Python for Data Science Workshop",
+    "Hip-Hop & Street Dance Showcase",
+    "Entrepreneurship Bootcamp",
+    "Food Truck Festival",
+    "Cloud Architecture Deep Dive",
+    "Indie Film Screening & Q&A",
+    "CrossFit Open Championship",
+    "Vegan Cooking Masterclass",
+    "Cybersecurity Threats & Defense",
+    "Photography Walk: Urban Landscapes",
+    "Product Management Workshop",
+    "Electronic Music Night",
+    "Marathon Training Kick-Off",
+    "Craft Beer & Cheese Pairing",
+    "Kubernetes & DevOps Conf",
+    "Comedy Night: Open Mic",
+    "Mental Health & Wellness Seminar",
+    "GraphQL Workshop for Engineers",
+    "Salsa & Latin Dance Social",
+    "Green Energy Innovation Expo",
+    "Book Club: Science Fiction",
+    "UX Design Thinking Sprint",
+    "Basketball 3v3 Tournament",
+    "Street Food Safari",
+    "Blockchain & Web3 Summit",
+    "Acoustic Live Sessions",
+    "Half Marathon — City Classic",
+    "Pottery & Ceramics Studio Day",
+    "Sales & Growth Hacking Masterclass",
+    "Sunrise Meditation & Brunch",
+    "React Native Mobile Hackathon",
 ]
 
 
@@ -70,14 +159,12 @@ async def seed():
         db.add(admin)
 
         organizers = []
-        for _ in range(5):
-            profile = fake.profile()
-            name_parts = profile["name"].split(" ", 1)
+        for i, (first, last) in enumerate(ORGANIZER_NAMES, start=1):
             org = User(
-                email=fake.unique.email(),
+                email=f"organizer{i}@eventhub.dev",
                 password_hash=auth_service.hash_password("Passw0rd!"),
-                first_name=name_parts[0],
-                last_name=name_parts[1] if len(name_parts) > 1 else "Organizer",
+                first_name=first,
+                last_name=last,
                 role="organizer",
                 bio=fake.text(max_nb_chars=200),
                 is_active=True,
@@ -88,14 +175,12 @@ async def seed():
             organizers.append(org)
 
         attendees = []
-        for _ in range(20):
-            profile = fake.profile()
-            name_parts = profile["name"].split(" ", 1)
+        for i, (first, last) in enumerate(ATTENDEE_NAMES, start=1):
             att = User(
-                email=fake.unique.email(),
+                email=f"attendee{i:02d}@eventhub.dev",
                 password_hash=auth_service.hash_password("Passw0rd!"),
-                first_name=name_parts[0],
-                last_name=name_parts[1] if len(name_parts) > 1 else "Attendee",
+                first_name=first,
+                last_name=last,
                 role="attendee",
                 is_active=True,
                 created_at=datetime.now(timezone.utc),
@@ -111,19 +196,39 @@ async def seed():
         print("Seeding events and tickets...")
         events = []
         now = datetime.now(timezone.utc)
-        for i in range(30):
+
+        for i, title in enumerate(EVENT_TITLES):
             city = random.choice(CITIES)
             cat = random.choice(cats)
-            org = random.choice(organizers)
-            start = now + timedelta(days=random.randint(1, 90))
+            org = organizers[i % len(organizers)]
+
+            # Mix of past, present-ish, and future events
+            if i < 8:
+                # Past events (already happened)
+                start = now - timedelta(days=random.randint(10, 60))
+            elif i < 12:
+                # Pending approval events (for demo)
+                start = now + timedelta(days=random.randint(5, 30))
+            else:
+                # Future events
+                start = now + timedelta(days=random.randint(1, 120))
+
             end = start + timedelta(hours=random.randint(2, 8))
+
+            # Status: a few pending for admin review, rest published
+            if 8 <= i < 12:
+                status = "pending"
+            elif i < 8:
+                status = "published"
+            else:
+                status = "published"
 
             event = Event(
                 organizer_id=org.id,
                 category_id=cat.id,
-                title=fake.catch_phrase(),
-                description=fake.paragraph(nb_sentences=5),
-                status="published",
+                title=title,
+                description=fake.paragraph(nb_sentences=6),
+                status=status,
                 start_at=start,
                 end_at=end,
                 timezone="America/New_York",
@@ -133,8 +238,8 @@ async def seed():
                 latitude=city["lat"] + random.uniform(-0.05, 0.05),
                 longitude=city["lng"] + random.uniform(-0.05, 0.05),
                 capacity=random.choice([50, 100, 250, 500, 1000]),
-                is_virtual=random.random() < 0.2,
-                tags=random.sample(["networking", "workshop", "conference", "hackathon", "meetup", "panel"], k=2),
+                is_virtual=(i % 7 == 0),
+                tags=random.sample(["networking", "workshop", "conference", "hackathon", "meetup", "panel", "outdoor", "online"], k=2),
                 created_at=datetime.now(timezone.utc),
                 updated_at=datetime.now(timezone.utc),
             )
@@ -146,9 +251,10 @@ async def seed():
             await db.refresh(e)
 
         # Add ticket types
-        ticket_types = []
+        ticket_types_by_event = {}
         for event in events:
-            # Free ticket
+            tts = []
+
             free_tt = TicketType(
                 event_id=event.id,
                 name="General Admission",
@@ -160,10 +266,9 @@ async def seed():
                 updated_at=datetime.now(timezone.utc),
             )
             db.add(free_tt)
-            ticket_types.append((event, free_tt))
+            tts.append(free_tt)
 
             if random.random() > 0.5:
-                # Paid VIP ticket
                 vip_tt = TicketType(
                     event_id=event.id,
                     name="VIP",
@@ -175,15 +280,31 @@ async def seed():
                     updated_at=datetime.now(timezone.utc),
                 )
                 db.add(vip_tt)
-                ticket_types.append((event, vip_tt))
+                tts.append(vip_tt)
+
+            ticket_types_by_event[event.id] = tts
 
         await db.commit()
-        for _, tt in ticket_types:
-            await db.refresh(tt)
+        for tts in ticket_types_by_event.values():
+            for tt in tts:
+                await db.refresh(tt)
 
-        print("Seeding registrations...")
-        for attendee in attendees[:10]:
-            for event, tt in random.sample(ticket_types, min(5, len(ticket_types))):
+        # Only register attendees for published events
+        published_events = [e for e in events if e.status == "published"]
+
+        print("Seeding registrations (all 20 attendees)...")
+        registered_pairs = set()
+        for attendee in attendees:
+            num_events = random.randint(3, 8)
+            sample_events = random.sample(published_events, min(num_events, len(published_events)))
+            for event in sample_events:
+                pair = (attendee.id, event.id)
+                if pair in registered_pairs:
+                    continue
+                registered_pairs.add(pair)
+
+                tts = ticket_types_by_event[event.id]
+                tt = random.choice(tts)
                 qty = 1
                 if tt.quantity_sold + qty <= tt.quantity_total:
                     reg = Registration(
@@ -203,11 +324,26 @@ async def seed():
                     db.add(tt)
 
         await db.commit()
-        print("✓ Seed complete!")
-        print(f"  Admin: admin@eventhub.dev / Admin1234!")
-        print(f"  Organizers: {len(organizers)} (password: Passw0rd!)")
-        print(f"  Attendees: {len(attendees)} (password: Passw0rd!)")
-        print(f"  Events: {len(events)}")
+
+        pending_count = sum(1 for e in events if e.status == "pending")
+        published_count = sum(1 for e in events if e.status == "published")
+
+        print("\n✓ Seed complete!")
+        print(f"\n{'─'*50}")
+        print("  DEMO CREDENTIALS")
+        print(f"{'─'*50}")
+        print(f"  Admin:      admin@eventhub.dev        / Admin1234!")
+        print(f"{'─'*50}")
+        for i in range(1, 6):
+            first, last = ORGANIZER_NAMES[i - 1]
+            print(f"  Organizer{i}: organizer{i}@eventhub.dev    / Passw0rd!  ({first} {last})")
+        print(f"{'─'*50}")
+        for i in range(1, 21):
+            first, last = ATTENDEE_NAMES[i - 1]
+            print(f"  Attendee{i:02d}: attendee{i:02d}@eventhub.dev   / Passw0rd!  ({first} {last})")
+        print(f"{'─'*50}")
+        print(f"\n  Events: {len(events)} total ({published_count} published, {pending_count} pending review)")
+        print(f"  Registrations: {len(registered_pairs)} total across all 20 attendees")
 
 
 if __name__ == "__main__":

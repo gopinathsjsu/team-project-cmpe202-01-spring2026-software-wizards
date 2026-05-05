@@ -67,11 +67,11 @@ export default function MyEventsPage() {
                   <div className="flex items-center gap-1 text-sm text-yellow-600">
                     <Clock size={14} aria-hidden="true" /> Under Review
                   </div>
-                ) : event.status === 'published' ? (
+                ) : (
                   <Link to={`/events/${event.id}/attendees`}>
                     <Button variant="secondary" size="sm">Attendees</Button>
                   </Link>
-                ) : null}
+                )}
                 {event.status !== 'cancelled' && (
                   <Button
                     variant="danger"
