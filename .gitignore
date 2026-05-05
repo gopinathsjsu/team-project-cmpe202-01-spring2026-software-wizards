@@ -48,3 +48,5 @@ eventhub-ui/.vite/
 .idea/
 *.swp
 *.swo
+
+eventhub-ui/package-lock.json
