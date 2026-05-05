@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Check, X, Ban, RefreshCw } from 'lucide-react'
 import { useAdminEvents, useAdminUsers, useAdmin } from '../hooks/useAdmin'
 import Badge from '../components/ui/Badge'
@@ -8,13 +9,17 @@ import Spinner from '../components/ui/Spinner'
 import Input from '../components/ui/Input'
 import { formatEventDateTime } from '../utils/formatDate'
 
-export default function AdminPage() {
-  const [tab, setTab] = useState('events')
+export default function AdminPage({ initialTab = 'events' }) {
+  const [tab, setTab] = useState(initialTab)
   const [rejectModal, setRejectModal] = useState(null)
   const [rejectReason, setRejectReason] = useState('')
   const { data: eventsData, isLoading: eventsLoading } = useAdminEvents({ status: 'pending' })
   const { data: usersData, isLoading: usersLoading } = useAdminUsers()
   const { approveEvent, rejectEvent, suspendUser, reactivateUser } = useAdmin()
+
+  useEffect(() => {
+    setTab(initialTab)
+  }, [initialTab])
 
   const handleReject = async () => {
     await rejectEvent.mutateAsync({ id: rejectModal, reason: rejectReason })
@@ -24,7 +29,7 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Panel</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Moderation</h1>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-gray-200" role="tablist">
@@ -52,16 +57,21 @@ export default function AdminPage() {
           ) : (
             <div className="space-y-3">
               {eventsData?.items?.map((event) => (
-                <div key={event.id} className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between gap-4">
+                <div
+                  key={event.id}
+                  className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between gap-4"
+                >
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900">{event.title}</p>
                     <p className="text-sm text-gray-500 mt-0.5">
                       <time dateTime={event.start_at}>{formatEventDateTime(event.start_at)}</time>
                       {event.city && ` · ${event.city}`}
                     </p>
-                    <Badge status="pending" className="mt-2">Pending Review</Badge>
                   </div>
                   <div className="flex gap-2">
+                    <Link to={`/events/${event.id}`} aria-label={`View event ${event.title}`}>
+                      <Button variant="secondary" size="sm">View</Button>
+                    </Link>
                     <Button
                       size="sm"
                       onClick={() => approveEvent.mutate(event.id)}
@@ -146,6 +156,7 @@ export default function AdminPage() {
           </div>
         </div>
       </Modal>
+
     </div>
   )
 }

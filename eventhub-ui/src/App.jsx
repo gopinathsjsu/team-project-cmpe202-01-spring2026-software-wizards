@@ -30,6 +30,12 @@ function RequireAuth({ children, roles }) {
   return children
 }
 
+function HomeRoute() {
+  const { user } = useAuthStore()
+  if (user?.role === 'admin') return <Navigate to="/dashboard" replace />
+  return <HomePage />
+}
+
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -37,7 +43,7 @@ export default function App() {
       <main className="flex-1">
         <Suspense fallback={<div className="flex justify-center py-20"><Spinner size="lg" /></div>}>
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<HomeRoute />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/events/:id/attendees" element={
               <RequireAuth roles={['organizer', 'admin']}><EventAttendeesPage /></RequireAuth>
@@ -60,13 +66,19 @@ export default function App() {
               <RequireAuth roles={['organizer', 'admin']}><DashboardPage /></RequireAuth>
             } />
             <Route path="/dashboard/events/new" element={
-              <RequireAuth roles={['organizer', 'admin']}><CreateEventPage /></RequireAuth>
+              <RequireAuth roles={['organizer']}><CreateEventPage /></RequireAuth>
             } />
             <Route path="/dashboard/events/:id/edit" element={
-              <RequireAuth roles={['organizer', 'admin']}><EditEventPage /></RequireAuth>
+              <RequireAuth roles={['organizer']}><EditEventPage /></RequireAuth>
             } />
             <Route path="/admin" element={
-              <RequireAuth roles={['admin']}><AdminPage /></RequireAuth>
+              <RequireAuth roles={['admin']}><Navigate to="/admin/events" replace /></RequireAuth>
+            } />
+            <Route path="/admin/events" element={
+              <RequireAuth roles={['admin']}><AdminPage initialTab="events" /></RequireAuth>
+            } />
+            <Route path="/admin/users" element={
+              <RequireAuth roles={['admin']}><AdminPage initialTab="users" /></RequireAuth>
             } />
 
             <Route path="*" element={<NotFoundPage />} />

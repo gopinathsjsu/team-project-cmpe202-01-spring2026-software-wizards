@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
-import { Plus, Calendar, Users, TrendingUp } from 'lucide-react'
+import { Plus, Calendar, Users, TrendingUp, ArrowRight } from 'lucide-react'
 import { useEvents } from '../hooks/useEvents'
+import { useAdminEvents } from '../hooks/useAdmin'
 import useAuthStore from '../store/authStore'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
@@ -9,12 +10,22 @@ import { formatEventDateTime } from '../utils/formatDate'
 
 export default function DashboardPage() {
   const { user } = useAuthStore()
-  const { data, isLoading } = useEvents({ organizer_id: user?.id, size: 10 })
+  const isAdmin = user?.role === 'admin'
+  const eventsParams = isAdmin ? { size: 10 } : { organizer_id: user?.id, size: 10 }
+  const { data, isLoading } = useEvents(eventsParams)
+  const { data: adminPendingData } = useAdminEvents(
+    { status: 'pending' },
+    { enabled: isAdmin }
+  )
+
+  const pendingCount = isAdmin
+    ? (adminPendingData?.total ?? adminPendingData?.items?.length ?? 0)
+    : (data?.items?.filter(e => e.status === 'pending').length || 0)
 
   const stats = {
     total: data?.total || 0,
     published: data?.items?.filter(e => e.status === 'published').length || 0,
-    pending: data?.items?.filter(e => e.status === 'pending').length || 0,
+    pending: pendingCount,
   }
 
   return (
@@ -24,12 +35,17 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 text-sm mt-1">Welcome back, {user?.first_name}!</p>
         </div>
-        <Link to="/dashboard/events/new">
-          <Button><Plus size={16} aria-hidden="true" /> New Event</Button>
-        </Link>
+        {user?.role !== 'admin' && (
+          <Link to="/dashboard/events/new">
+            <Button><Plus size={16} aria-hidden="true" /> New Event</Button>
+          </Link>
+        )}
       </div>
 
       {/* Stats */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-medium text-gray-500">Event Overview</h2>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
           { label: 'Total Events', value: stats.total, icon: Calendar, color: 'text-blue-600 bg-blue-50' },
@@ -40,10 +56,17 @@ export default function DashboardPage() {
             <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${color}`}>
               <Icon size={22} aria-hidden="true" />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-2xl font-bold text-gray-900">{value}</p>
               <p className="text-sm text-gray-500">{label}</p>
             </div>
+            {user?.role === 'admin' && label === 'Pending Review' && value > 0 && (
+              <Link to="/admin/events" aria-label="Go to event approvals">
+                <Button variant="secondary" size="sm" className="px-2">
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Button>
+              </Link>
+            )}
           </div>
         ))}
       </div>
@@ -52,7 +75,7 @@ export default function DashboardPage() {
       <div className="bg-white border border-gray-200 rounded-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="font-semibold text-gray-900">Recent Events</h2>
-          <Link to="/my-events" className="text-sm text-blue-600 hover:underline">View all</Link>
+          <Link to={user?.role === 'admin' ? '/events' : '/my-events'} className="text-sm text-blue-600 hover:underline">View all</Link>
         </div>
 
         {isLoading ? (
@@ -60,7 +83,9 @@ export default function DashboardPage() {
         ) : data?.items?.length === 0 ? (
           <div className="text-center py-10 text-gray-500">
             <p>No events yet.</p>
-            <Link to="/dashboard/events/new" className="text-blue-600 hover:underline text-sm">Create one</Link>
+              {user?.role !== 'admin' && (
+                <Link to="/dashboard/events/new" className="text-blue-600 hover:underline text-sm">Create one</Link>
+              )}
           </div>
         ) : (
           <div>
@@ -73,7 +98,9 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-500">{event.registration_count} registered</span>
                   <Badge status={event.status}>{event.status.charAt(0).toUpperCase() + event.status.slice(1)}</Badge>
-                  <Link to={`/dashboard/events/${event.id}/edit`} className="text-sm text-blue-600 hover:underline focus:ring-2 focus:ring-blue-500 rounded">Edit</Link>
+                  {user?.role !== 'admin' && (
+                    <Link to={`/dashboard/events/${event.id}/edit`} className="text-sm text-blue-600 hover:underline focus:ring-2 focus:ring-blue-500 rounded">Edit</Link>
+                  )}
                 </div>
               </div>
             ))}

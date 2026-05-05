@@ -7,6 +7,7 @@ import { useCategories } from '../../hooks/useEvents'
 
 export default function Navbar() {
   const { user } = useAuthStore()
+  const isAdmin = user?.role === 'admin'
   const { logout } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -47,30 +48,32 @@ export default function Navbar() {
             </form>
 
             {/* Category dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setCatMenuOpen(!catMenuOpen)}
-                aria-expanded={catMenuOpen}
-                aria-haspopup="true"
-                className="flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
-              >
-                Categories <ChevronDown size={14} aria-hidden="true" />
-              </button>
-              {catMenuOpen && (
-                <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                  {categories.map((cat) => (
-                    <Link
-                      key={cat.id}
-                      to={`/events?category_id=${cat.id}`}
-                      onClick={() => setCatMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      <span aria-hidden="true">{cat.icon}</span> {cat.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+            {!isAdmin && (
+              <div className="relative">
+                <button
+                  onClick={() => setCatMenuOpen(!catMenuOpen)}
+                  aria-expanded={catMenuOpen}
+                  aria-haspopup="true"
+                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+                >
+                  Categories <ChevronDown size={14} aria-hidden="true" />
+                </button>
+                {catMenuOpen && (
+                  <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    {categories.map((cat) => (
+                      <Link
+                        key={cat.id}
+                        to={`/events?category_id=${cat.id}`}
+                        onClick={() => setCatMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        <span aria-hidden="true">{cat.icon}</span> {cat.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right — auth buttons */}
@@ -92,15 +95,20 @@ export default function Navbar() {
                 </button>
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                    <Link to="/my-registrations" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>My Tickets</Link>
-                    {(user.role === 'organizer' || user.role === 'admin') && (
+                    {!isAdmin && (
+                      <Link to="/my-registrations" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>My Tickets</Link>
+                    )}
+                    {!isAdmin && user.role === 'organizer' && (
                       <Link to="/my-events" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>My Events</Link>
                     )}
                     {(user.role === 'organizer' || user.role === 'admin') && (
                       <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>Dashboard</Link>
                     )}
                     {user.role === 'admin' && (
-                      <Link to="/admin" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>Admin</Link>
+                      <>
+                        <Link to="/admin/events" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>Event Approval</Link>
+                        <Link to="/admin/users" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>User Management</Link>
+                      </>
                     )}
                     <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>Profile</Link>
                     <hr className="my-1" />
@@ -148,15 +156,20 @@ export default function Navbar() {
             <Link to="/events" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>Browse Events</Link>
             {user ? (
               <>
-                <Link to="/my-registrations" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>My Tickets</Link>
-                {(user.role === 'organizer' || user.role === 'admin') && (
+                {!isAdmin && (
+                  <Link to="/my-registrations" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>My Tickets</Link>
+                )}
+                {!isAdmin && user.role === 'organizer' && (
                   <Link to="/my-events" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>My Events</Link>
                 )}
                 {(user.role === 'organizer' || user.role === 'admin') && (
                   <Link to="/dashboard" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>Dashboard</Link>
                 )}
                 {user.role === 'admin' && (
-                  <Link to="/admin" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>Admin</Link>
+                  <>
+                    <Link to="/admin/events" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>Event Approval</Link>
+                    <Link to="/admin/users" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>User Management</Link>
+                  </>
                 )}
                 <Link to="/profile" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded" onClick={() => setMenuOpen(false)}>Profile</Link>
                 <button onClick={() => { setMenuOpen(false); logout() }} className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded">Logout</button>

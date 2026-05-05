@@ -4,10 +4,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../api/client'
 
-export function useAdminEvents(params = {}) {
+export function useAdminEvents(params = {}, options = {}) {
   return useQuery({
     queryKey: ['admin-events', params],
     queryFn: () => api.get('/admin/events', { params }).then((r) => r.data),
+    ...options,
   })
 }
 
