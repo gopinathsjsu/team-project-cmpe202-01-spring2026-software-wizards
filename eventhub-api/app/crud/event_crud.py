@@ -63,11 +63,25 @@ class EventCRUD(BaseCRUD[Event, EventCreate, EventUpdate]):
             .where(Event.status == status)
         )
 
-        # Full-text search
+        # Full-text search (ranked) with optional fuzzy fallback
         if q:
-            query = query.where(
-                Event.search_vector.op("@@")(func.plainto_tsquery("english", q))
-            )
+            tsquery = func.websearch_to_tsquery("english", q)
+            rank = func.ts_rank_cd(Event.search_vector, tsquery)
+            ilike_term = f"%{q}%"
+            filters = [
+                Event.search_vector.op("@@")(tsquery),
+                Event.title.ilike(ilike_term),
+            ]
+            trigram_sim = None
+            if len(q) >= 3:
+                trigram_sim = func.similarity(Event.title, q)
+                filters.append(trigram_sim > 0.2)
+
+            query = query.where(or_(*filters))
+            if trigram_sim is not None:
+                query = query.order_by(rank.desc(), trigram_sim.desc())
+            else:
+                query = query.order_by(rank.desc())
 
         if category_id:
             query = query.where(Event.category_id == category_id)
