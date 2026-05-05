@@ -19,7 +19,10 @@ export default function SearchBar({ defaultValue = '', onSearch }) {
           id="event-search"
           type="search"
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => {
+            setQ(e.target.value)
+            if (e.target.value === '') onSearch('')
+          }}
           placeholder="Search events, topics, speakers…"
           className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-black placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />

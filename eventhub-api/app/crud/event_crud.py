@@ -71,12 +71,14 @@ class EventCRUD(BaseCRUD[Event, EventCreate, EventUpdate]):
             filters = [
                 Event.search_vector.op("@@")(tsquery),
                 Event.title.ilike(ilike_term),
+                Category.name.ilike(ilike_term),
             ]
             trigram_sim = None
             if len(q) >= 3:
                 trigram_sim = func.similarity(Event.title, q)
                 filters.append(trigram_sim > 0.2)
 
+            query = query.join(Category, Event.category_id == Category.id, isouter=True)
             query = query.where(or_(*filters))
             if trigram_sim is not None:
                 query = query.order_by(rank.desc(), trigram_sim.desc())
