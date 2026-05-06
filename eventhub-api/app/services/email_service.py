@@ -25,9 +25,10 @@ class EmailService:
         msg.attach(MIMEText(notification.html_body(), "html"))
 
         try:
-            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as server:
                 server.ehlo()
                 server.starttls()
+                server.ehlo()
                 if settings.SMTP_USER:
                     server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                 server.sendmail(settings.SMTP_FROM, notification.to_email(), msg.as_string())
@@ -37,7 +38,7 @@ class EmailService:
 
     async def send(self, notification: BaseNotification) -> None:
         """Async wrapper — runs SMTP in a thread pool to avoid blocking."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, self._send_sync, notification)
 
 

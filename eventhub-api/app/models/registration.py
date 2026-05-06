@@ -31,9 +31,9 @@ class Registration(Base, TimestampMixin):
     reminder_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
-    attendee = relationship("User", back_populates="registrations", lazy="noload")
-    event = relationship("Event", back_populates="registrations", lazy="noload")
-    ticket_type = relationship("TicketType", back_populates="registrations", lazy="noload")
+    attendee = relationship("User", back_populates="registrations", lazy="raise")
+    event = relationship("Event", back_populates="registrations", lazy="raise")
+    ticket_type = relationship("TicketType", back_populates="registrations", lazy="raise")
 
 
 class PasswordResetToken(Base):
